@@ -1,98 +1,146 @@
 # DeepLearning Project 2
 
-This project is about designing, training, and analyzing a convolutional neural network (CNN) for image classification. The work is completed in [Project2.ipynb](c:\Users\sia\Desktop\DL\src\DeepLearning_Project2\Project2.ipynb), where the full implementation, plots, evaluation results, and written answers are included.
+This project focuses on designing, training, and analyzing a convolutional neural network for image classification on CIFAR-10. The full work is contained in [Project2.ipynb](/c:/Users/sia/Desktop/DL/src/DeepLearning_Project2/Project2.ipynb), including the implementation, plots, evaluation results, comparison with a DNN baseline, and written answers for each project section.
 
-## What This Project Covers
+## Project Scope
 
-The notebook focuses on the core ideas behind CNNs and compares them with a standard deep neural network (DNN). It includes:
+The notebook covers:
 
 - conceptual CNN questions such as weight sharing, stride, and pooling,
-- implementation of a CNN with two convolution layers and pooling,
-- manual computation of layer output shapes,
-- model training and evaluation,
-- confusion matrix and per-class accuracy analysis,
-- feature map visualization from the first convolution layer,
-- comparison between a CNN and a DNN on the same dataset,
-- short written reflections on the results.
+- implementation of a CNN for CIFAR-10 classification,
+- manual output-shape calculations through the convolution and pooling stack,
+- model training and evaluation in PyTorch,
+- loss and accuracy curves for both CNN and DNN training,
+- confusion matrices and per-class accuracy analysis,
+- feature map visualization from the first CNN layer,
+- CNN versus DNN comparison on the same train/test split,
+- final reflection on which architectural choice mattered most.
 
-## Dataset Used
+## Dataset
 
-The project uses the handwritten digits dataset from `sklearn.datasets.load_digits`.
+The project uses the local **CIFAR-10** dataset stored in the [`data`](/c:/Users/sia/Desktop/DL/src/DeepLearning_Project2/data) folder.
 
-Why this dataset was used:
+- training data comes from `data_batch_1` to `data_batch_5`
+- test data comes from `test_batch`
+- each image has shape `3 x 32 x 32`
+- there are 10 classes:
+  `airplane`, `automobile`, `bird`, `cat`, `deer`, `dog`, `frog`, `horse`, `ship`, `truck`
 
-- it is available locally,
-- it avoids external downloads,
-- it is suitable for quick CNN experiments,
-- it contains 10 classes (`0` to `9`) of grayscale digit images.
+Preprocessing in the notebook includes:
 
-Each image is `8 x 8`, which makes the task small enough to train quickly while still supporting CNN analysis.
+- scaling pixel values to `[0, 1]`,
+- computing channel-wise mean and standard deviation from the training split,
+- normalization using those training statistics,
+- random crop and random horizontal flip for training augmentation.
 
-## Models Implemented
+## Models
 
 ### CNN
 
-The CNN includes:
+The CNN uses:
 
-- `Conv2d(1, 16, kernel_size=3, padding=1)`
-- `ReLU`
+- `Conv2d(3, 32, kernel_size=3, padding=1)`
+- batch normalization and `ReLU`
 - `MaxPool2d(2, 2)`
-- `Conv2d(16, 32, kernel_size=3, padding=1)`
-- `ReLU`
+- `Conv2d(32, 64, kernel_size=3, padding=1)`
+- batch normalization and `ReLU`
 - `MaxPool2d(2, 2)`
-- fully connected classifier with dropout
+- `Conv2d(64, 128, kernel_size=3, padding=1)`
+- batch normalization and `ReLU`
+- `MaxPool2d(2, 2)`
+- fully connected classifier:
+  `Linear(2048, 256) -> ReLU -> Dropout(0.3) -> Linear(256, 10)`
 
-Manual shape flow:
+Manual CNN shape flow:
 
-- input: `1 x 8 x 8`
-- after conv1: `16 x 8 x 8`
-- after pool1: `16 x 4 x 4`
-- after conv2: `32 x 4 x 4`
-- after pool2: `32 x 2 x 2`
-- flattened: `128`
+- input: `3 x 32 x 32`
+- after conv1: `32 x 32 x 32`
+- after pool1: `32 x 16 x 16`
+- after conv2: `64 x 16 x 16`
+- after pool2: `64 x 8 x 8`
+- after conv3: `128 x 8 x 8`
+- after pool3: `128 x 4 x 4`
+- flatten: `2048`
+- output: `10`
+
+CNN trainable parameters: `620,810`
 
 ### DNN Baseline
 
-For comparison, a fully connected neural network was also trained on the same train/test split. This provides a baseline to compare CNN behavior against a non-convolutional architecture.
+The DNN baseline flattens the image immediately and uses fully connected layers:
 
-## What We Did
+- `Linear(3 * 32 * 32, 512)`
+- `ReLU`
+- `Dropout(0.3)`
+- `Linear(512, 256)`
+- `ReLU`
+- `Dropout(0.3)`
+- `Linear(256, 10)`
 
-The notebook was completed from start to finish:
+DNN trainable parameters: `1,707,274`
 
-1. Answered all conceptual Markdown questions.
-2. Implemented dataset loading, preprocessing, normalization, and light augmentation.
-3. Built the CNN model and documented the output shapes.
-4. Wrote the full training and evaluation loop in PyTorch.
-5. Plotted loss and accuracy curves.
-6. Computed the confusion matrix and per-class accuracy.
-7. Identified the hardest class and explained why it was harder.
-8. Visualized feature maps from the first convolution layer.
-9. Trained a DNN on the same dataset for comparison.
-10. Added the comparison table and final reflection.
+## Training Setup
+
+Both models are trained in the notebook with:
+
+- PyTorch
+- Adam optimizer
+- cross-entropy loss
+- `5` epochs
+- CPU-friendly settings so the notebook remains runnable in the provided environment
+
+The shared training helper tracks:
+
+- training loss per epoch,
+- test loss per epoch,
+- training accuracy per epoch,
+- test accuracy per epoch,
+- total training time.
+
+## Notebook Outputs
+
+The notebook produces:
+
+- CNN training loss and accuracy curves,
+- CNN confusion matrix,
+- CNN per-class accuracy and hardest class,
+- DNN training loss and accuracy curves,
+- DNN confusion matrix,
+- DNN per-class accuracy and hardest class,
+- first-layer CNN feature map visualizations,
+- comparison table for CNN versus DNN.
 
 ## Results Summary
 
-From the validated run in the `mlhub` environment:
+From the run documented in the notebook:
 
-- CNN accuracy: `94.72%`
-- DNN accuracy: `96.11%`
-- CNN parameters: `13,706`
-- DNN parameters: `17,226`
+| Model | Accuracy | Parameters | Training Time |
+|---|---:|---:|---:|
+| CNN | 74.09% | 620,810 | 663.37 s |
+| DNN | 40.87% | 1,707,274 | 236.63 s |
 
-The hardest class for the CNN was digit `8`, with a per-class accuracy of `80.00%`. This makes sense because digit `8` can look similar to several other digits when represented in a very small `8 x 8` image.
+Additional reported observations:
 
-An interesting outcome of this project is that the DNN slightly outperformed the CNN. That is reasonable here because the dataset is tiny, simple, and already centered, so the DNN can still perform very well. On larger and more varied image datasets, CNNs usually become more advantageous.
+- hardest CNN class: `cat` with per-class accuracy `50.10%`
+- the CNN clearly outperformed the DNN despite using fewer parameters
+
+The main reason is that CIFAR-10 is an image dataset with strong spatial structure. The CNN keeps that structure through convolution and pooling, while the DNN flattens the image at the start and loses the locality bias that helps on natural-image tasks.
 
 ## How To Run
 
-Use the `mlhub` Jupyter kernel for the notebook.
+Use the `mlhub` Jupyter kernel and open:
 
-Open and run:
+- [Project2.ipynb](/c:/Users/sia/Desktop/DL/src/DeepLearning_Project2/Project2.ipynb)
 
-- [Project2.ipynb](c:\Users\sia\Desktop\DL\src\DeepLearning_Project2\Project2.ipynb)
+Run the notebook from top to bottom to reproduce:
 
-The notebook contains all code, plots, and written explanations needed for the project submission.
+- data loading and preprocessing,
+- CNN and DNN training,
+- plotted training curves,
+- confusion matrices,
+- feature map visualizations,
+- final comparison outputs.
 
 ## Project Goal
 
-The main goal of this project is to understand how CNNs work in practice, not just how to code them. It combines implementation, mathematical reasoning, model evaluation, and interpretation of learned features.
+The goal of this project is to understand CNNs beyond implementation alone by combining model design, manual reasoning about tensor shapes, training behavior analysis, feature interpretation, and comparison against a non-convolutional baseline.
